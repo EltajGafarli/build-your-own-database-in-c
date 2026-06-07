@@ -1,6 +1,7 @@
 #pragma once
 
 #include "parser.h"
+#include "kv_store.h"
 
 typedef enum {
     COMMAND_SUCCESS,
@@ -8,6 +9,6 @@ typedef enum {
     COMMAND_UNKNOWN
 } CommandResult;
 
-CommandResult handle_command(const ParsedCommand *command);
+CommandResult handle_command(KvStore *kv_store, const ParsedCommand *command);
 
 void handle_help(void);

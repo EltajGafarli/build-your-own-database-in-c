@@ -4,11 +4,15 @@
 #include "../include/command.h"
 #include "../include/parser.h"
 #include "../include/shell.h"
+#include "../include/kv_store.h"
 
 #define MAX_INPUT_SIZE 1024
 
 int main(void) {
     char input[MAX_INPUT_SIZE];
+
+    KvStore store;
+    kv_store_init(&store);
 
     while (true) {
         bool success = shell_read_input(input, sizeof(input));
@@ -30,7 +34,7 @@ int main(void) {
             continue;
         }
 
-        CommandResult command_result = handle_command(&command);
+        CommandResult command_result = handle_command(&store, &command);
 
         if (command_result == COMMAND_EXIT) {
             break;
