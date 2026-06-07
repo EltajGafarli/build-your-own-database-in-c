@@ -1,0 +1,14 @@
+# ninja log v7
+3	69	8025323804354206	CMakeFiles/PageDB.dir/src/main.c.obj	cfa1a74be71fccaf
+3	65	8025335080828468	CMakeFiles/PageDB.dir/src/command.c.obj	d3c86129a5aec9b4
+68	851	8025427155062897	build.ninja	b54b0e15c59d641f
+68	851	8025427155047912	C:/Users/Eltaj Gafarli/CLionProjects/PageDB/build/cmake_install.cmake	b54b0e15c59d641f
+23	333	8025319206929142	CMakeFiles/PageDB.dir/src/shell.c.obj	7bb820cdcf189430
+66	145	8025335081456674	PageDB.exe	5547cd8ad42f8792
+7	67	8025334524412949	CMakeFiles/PageDB.dir/src/parser.c.obj	131b9b4ec828c992
+14	758	8025427236648607	CMakeFiles/PageDB.dir/src/parser.c.obj	131b9b4ec828c992
+9	760	8025427236587925	CMakeFiles/PageDB.dir/src/command.c.obj	d3c86129a5aec9b4
+3	760	8025427236534727	CMakeFiles/PageDB.dir/src/main.c.obj	cfa1a74be71fccaf
+760	1786	8025427244110498	PageDB.exe	5547cd8ad42f8792
+3	61	8025428266147178	CMakeFiles/PageDB.dir/src/parser.c.obj	131b9b4ec828c992
+62	139	8025428266747733	PageDB.exe	5547cd8ad42f8792

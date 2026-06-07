@@ -1,0 +1,20 @@
+# CLion / IntelliJ project local files
+.idea/
+*.iml
+
+# CMake build folders
+cmake-build-*/
+build/
+
+# Compiled binaries / object files
+*.o
+*.obj
+*.exe
+*.out
+*.dll
+*.so
+*.dylib
+*.a
+
+# Logs
+*.log
