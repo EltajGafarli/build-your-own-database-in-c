@@ -1,3 +1,0 @@
-C:/Users/Eltaj Gafarli/CLionProjects/PageDB/build/CMakeFiles/PageDB.dir
-C:/Users/Eltaj Gafarli/CLionProjects/PageDB/build/CMakeFiles/edit_cache.dir
-C:/Users/Eltaj Gafarli/CLionProjects/PageDB/build/CMakeFiles/rebuild_cache.dir
