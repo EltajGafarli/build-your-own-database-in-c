@@ -63,3 +63,33 @@ bool storage_log_append(ParsedCommand *command, const char *filename) {
     }
 }
 
+bool storage_log_compact(KvStore *store, const char *filename) {
+
+    const char *temp_filename = "../data/pagedb.data.tmp";
+
+    FILE * fp = fopen(temp_filename, "w");
+
+    if (fp == NULL) {
+        return false;
+    }
+
+    for (size_t i = 0; i < KV_MAX_ITEMS; i++) {
+        if (store->entries[i].in_use) {
+            fprintf(fp, "%s %s %s\n", "put", store->entries[i].key, store->entries[i].value);
+        }
+    }
+
+    if (fclose(fp) != 0) {
+        remove(temp_filename);
+        return false;
+    }
+
+    remove(filename);
+
+    if (rename(temp_filename, filename) != 0) {
+        remove(temp_filename);
+        return false;
+    }
+
+    return true;
+}

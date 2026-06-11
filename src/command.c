@@ -87,6 +87,16 @@ CommandResult handle_command(KvStore *store, ParsedCommand *command, const char 
             return COMMAND_EXIT;
         }
 
+        case CMD_COMPACT: {
+            bool compact_success = storage_log_compact(store, file_path);
+
+            if (!compact_success) {
+                return COMMAND_ERROR;
+            }
+            printf("OK\n");
+            return COMMAND_SUCCESS;
+        }
+
         case CMD_UNKNOWN:
         default:
             return COMMAND_UNKNOWN;

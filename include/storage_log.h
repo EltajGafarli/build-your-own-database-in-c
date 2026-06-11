@@ -11,3 +11,5 @@ typedef enum READ_TOKEN_RESULT {
 void load_storage_log(KvStore *store, const char *filename);
 
 bool storage_log_append(ParsedCommand *command, const char *filename);
+
+bool storage_log_compact(KvStore *store, const char *filename);

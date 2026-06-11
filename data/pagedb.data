@@ -1,13 +1,2 @@
-put name eltaj
-put age 24
-delete name
 put first_name Nural
 put last_name Akbaroff
-put age 21
-delete age 
-put age 13
-put age 24
-delete age
-put name eltaj
-put name Orxan
-delete name
