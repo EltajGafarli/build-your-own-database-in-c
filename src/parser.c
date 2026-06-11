@@ -1,7 +1,6 @@
 #include "../include/parser.h"
 
 #include <string.h>
-#include <stdbool.h>
 #include <stdio.h>
 
 static ParseResult validate_command(const ParsedCommand *command, int token_count);

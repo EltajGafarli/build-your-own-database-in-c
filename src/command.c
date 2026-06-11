@@ -3,6 +3,7 @@
 #include <string.h>
 #include "parser.h"
 #include "kv_store.h"
+#include "storage_log.h"
 
 void handle_help(void) {
     printf("\nAvailable Commands:\n");
@@ -14,9 +15,32 @@ void handle_help(void) {
     printf("  quit   - Close this application\n\n");
 }
 
-CommandResult handle_command(KvStore *store, const ParsedCommand *command) {
+CommandResult handle_command(KvStore *store, ParsedCommand *command, const char *file_path) {
+
+    if (command->type == CMD_PUT || command->type == CMD_DELETE) {
+
+        if (command->type == CMD_DELETE) {
+            const char *value = NULL;
+
+            KvResult result = kv_store_get(store, command->key, &value);
+
+            if (result == KV_NOT_FOUND) {
+                printf("NOT FOUND\n");
+                return COMMAND_SUCCESS;
+            }
+        }
+
+        bool is_append = storage_log_append(command, file_path);
+
+        if (!is_append) {
+            printf("Error: could not append to log file\n");
+            return COMMAND_ERROR;
+        }
+    }
+
     switch (command->type) {
         case CMD_PUT: {
+
             KvResult result = kv_store_put(store, command->key, command->value);
 
             if (result == KV_OK) {

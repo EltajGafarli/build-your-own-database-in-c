@@ -7,6 +7,7 @@ add_executable(PageDB src/main.c
         src/command.c
         src/shell.c
         src/parser.c
-        src/kv_store.c)
+        src/kv_store.c
+        src/storage_log.c)
 
 target_include_directories(PageDB PRIVATE include)
