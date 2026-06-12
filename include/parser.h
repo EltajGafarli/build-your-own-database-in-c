@@ -16,7 +16,8 @@ typedef enum {
     CMD_GET,
     CMD_DELETE,
     CMD_UNKNOWN,
-    CMD_COMPACT
+    CMD_COMPACT,
+    CMD_STATS
 } CommandType;
 
 typedef struct {
