@@ -3,3 +3,6 @@ put last_name Akbaroff
 put a 3
 put name Eltaj
 delete name
+put name eltaj
+put name a
+put salam a

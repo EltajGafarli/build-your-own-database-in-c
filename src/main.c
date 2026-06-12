@@ -8,10 +8,18 @@
 
 #define MAX_INPUT_SIZE 1024
 
-int main(void) {
+int main(int argc, char *argv[]) {
+
     char input[MAX_INPUT_SIZE];
 
     const char *file_path = "../data/pagedb.data";
+
+    if (argc == 2) {
+        file_path = argv[1];
+    } else if (argc > 2) {
+        printf("Usage: PageDB [database_file]\n");
+        return 1;
+    }
 
     KvStore store;
     kv_store_init(&store);
