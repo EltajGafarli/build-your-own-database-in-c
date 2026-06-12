@@ -97,6 +97,11 @@ CommandResult handle_command(KvStore *store, ParsedCommand *command, const char 
             return COMMAND_SUCCESS;
         }
 
+        case CMD_STATS: {
+            printf("Active records: %zu\nMax records: %zu\nStorage file: %s\n", store->size, (size_t)KV_MAX_ITEMS, file_path);
+            return COMMAND_SUCCESS;
+        }
+
         case CMD_UNKNOWN:
         default:
             return COMMAND_UNKNOWN;

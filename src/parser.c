@@ -52,6 +52,7 @@ static ParseResult validate_command(const ParsedCommand *command, int token_coun
         case CMD_HELP:
         case CMD_EXIT:
         case CMD_COMPACT:
+        case CMD_STATS:
             return token_count == 1 ? PARSE_SUCCESS : PARSE_INVALID;
 
         case CMD_PUT:
@@ -96,6 +97,10 @@ static CommandType parse_command_type(const char *token) {
 
     if (strcmp(token, "compact") == 0) {
         return CMD_COMPACT;
+    }
+
+    if (strcmp(token, "stats") == 0) {
+        return CMD_STATS;
     }
 
     return CMD_UNKNOWN;
