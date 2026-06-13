@@ -131,6 +131,19 @@ KvResult kv_store_delete(KvStore *store, const char *key) {
 
 }
 
+void kv_store_destroy(KvStore *store) {
+    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+        KvEntry *head = store->buckets[i];
+        while (head != NULL) {
+            KvEntry *temp = head->next;
+            free(head);
+            head = temp;
+        }
+    }
+
+    kv_store_init(store);
+}
+
 static void copy_token(char *destination, const char *source) {
     strncpy(destination, source, MAX_TOKEN_SIZE - 1);
     destination[MAX_TOKEN_SIZE - 1] = '\0';
