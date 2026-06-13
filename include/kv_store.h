@@ -31,3 +31,5 @@ KvResult kv_store_put(KvStore *store, const char *key, const char *value);
 KvResult kv_store_get(const KvStore *store, const char *key, const char **value);
 
 KvResult kv_store_delete(KvStore *store, const char *key);
+
+void kv_store_destroy(KvStore *store);

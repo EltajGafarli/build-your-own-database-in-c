@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <signal.h>
 #include "../include/command.h"
 #include "../include/parser.h"
 #include "../include/shell.h"
@@ -8,7 +10,19 @@
 
 #define MAX_INPUT_SIZE 1024
 
+static volatile sig_atomic_t keep_running = 1;
+
+void handle_sigint(int sig) {
+    keep_running = 0;
+}
+
+
 int main(int argc, char *argv[]) {
+
+    if (signal(SIGINT, handle_sigint) == SIG_ERR) {
+        perror("Error registering signal handler");
+        return EXIT_FAILURE;
+    }
 
     char input[MAX_INPUT_SIZE];
 
@@ -26,7 +40,8 @@ int main(int argc, char *argv[]) {
 
     load_storage_log(&store, file_path);
 
-    while (true) {
+    while (keep_running) {
+
         bool success = shell_read_input(input, sizeof(input));
 
         if (!success) {
@@ -61,5 +76,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    return 0;
+    kv_store_destroy(&store);
+
+    return EXIT_SUCCESS;
 }
