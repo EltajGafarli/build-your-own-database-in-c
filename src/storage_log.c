@@ -73,9 +73,13 @@ bool storage_log_compact(KvStore *store, const char *filename) {
         return false;
     }
 
-    for (size_t i = 0; i < KV_MAX_ITEMS; i++) {
-        if (store->entries[i].in_use) {
-            fprintf(fp, "%s %s %s\n", "put", store->entries[i].key, store->entries[i].value);
+    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+
+        KvEntry *head = store->buckets[i];
+
+        while (head != NULL) {
+            fprintf(fp, "%s %s %s\n", "put", head->key, head->value);
+            head = head->next;
         }
     }
 
