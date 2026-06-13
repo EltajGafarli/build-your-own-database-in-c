@@ -5,6 +5,7 @@
 
 #define KV_MAX_ITEMS 1024
 #define MAX_TOKEN_SIZE 256
+#define DEFAULT_BUCKET_SIZE 256
 
 typedef enum {
     KV_OK,
@@ -12,14 +13,14 @@ typedef enum {
     KV_FULL
 } KvResult;
 
-typedef struct {
+typedef struct KvEntry {
     char key[MAX_TOKEN_SIZE];
     char value[MAX_TOKEN_SIZE];
-    bool in_use;
+    struct KvEntry *next;
 } KvEntry;
 
 typedef struct {
-    KvEntry entries[KV_MAX_ITEMS];
+    KvEntry* buckets[DEFAULT_BUCKET_SIZE];
     size_t size;
 } KvStore;
 
