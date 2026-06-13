@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 void load_storage_log(KvStore *store, const char *filename) {
     FILE * fp;
@@ -65,11 +66,22 @@ bool storage_log_append(ParsedCommand *command, const char *filename) {
 
 bool storage_log_compact(KvStore *store, const char *filename) {
 
-    const char *temp_filename = "../data/pagedb.data.tmp";
+    const char *suffix = ".tmp";
+
+    size_t temp_len = strlen(filename) + strlen(suffix) + 1;
+
+    char *temp_filename = malloc(temp_len);
+
+    if (temp_filename == NULL) {
+        return false;
+    }
+
+    snprintf(temp_filename, temp_len, "%s%s", filename, suffix);
 
     FILE * fp = fopen(temp_filename, "w");
 
     if (fp == NULL) {
+        free(temp_filename);
         return false;
     }
 
@@ -85,6 +97,7 @@ bool storage_log_compact(KvStore *store, const char *filename) {
 
     if (fclose(fp) != 0) {
         remove(temp_filename);
+        free(temp_filename);
         return false;
     }
 
@@ -92,8 +105,10 @@ bool storage_log_compact(KvStore *store, const char *filename) {
 
     if (rename(temp_filename, filename) != 0) {
         remove(temp_filename);
+        free(temp_filename);
         return false;
     }
 
+    free(temp_filename);
     return true;
 }
