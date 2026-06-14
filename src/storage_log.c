@@ -152,3 +152,25 @@ bool storage_log_compact(KvStore *store, const char *filename) {
     free(backup_filename);
     return true;
 }
+
+long storage_log_get_file_size(const char *filename) {
+    FILE *fp = fopen(filename, "rb");
+
+    if (fp == NULL) {
+        return -1;
+    }
+
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        fclose(fp);
+        return -1;
+    }
+
+    long size = ftell(fp);
+    fclose(fp);
+
+    if (size < 0) {
+        return -1;
+    }
+    return size;
+}
+

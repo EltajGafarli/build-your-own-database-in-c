@@ -13,6 +13,8 @@ void handle_help(void) {
     printf("  delete - Delete value by key: delete <key>\n");
     printf("  exit   - Close this application\n");
     printf("  quit   - Close this application\n\n");
+    printf("  compact - Rewrite log with active records only\n");
+    printf("  stats   - Show database statistics\n");
 }
 
 CommandResult handle_command(KvStore *store, ParsedCommand *command, const char *file_path) {
@@ -98,7 +100,19 @@ CommandResult handle_command(KvStore *store, ParsedCommand *command, const char 
         }
 
         case CMD_STATS: {
-            printf("Active records: %zu\nMax records: %zu\nStorage file: %s\n", store->size, (size_t)KV_MAX_ITEMS, file_path);
+            printf("Active records: %zu\nMax records: %zu\nStorage file: %s\n",
+                store->size,
+                (size_t)KV_MAX_ITEMS,
+                file_path);
+
+            long file_size = storage_log_get_file_size(file_path);
+
+            if (file_size >= 0) {
+                printf("Storage file size: %ld bytes\n", file_size);
+            } else {
+                printf("Storage file size: 0 bytes\n");
+            }
+
             return COMMAND_SUCCESS;
         }
 
