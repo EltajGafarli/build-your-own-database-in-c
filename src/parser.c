@@ -34,9 +34,22 @@ ParseResult parse_command(const char *input, ParsedCommand *command) {
         } else if (token_count == 2) {
             strncpy(command->value, token, MAX_TOKEN_SIZE - 1);
             command->value[MAX_TOKEN_SIZE - 1] = '\0';
-        } else {
+        } else if (token_count > 2 && command->type != CMD_PUT) {
             command->type = CMD_UNKNOWN;
             break;
+        }
+
+        if (token_count >= 3) {
+
+            size_t new_val_len = strlen(command->value) + strlen(token) + 1;
+
+            if (new_val_len < MAX_TOKEN_SIZE) {
+                strcat(command->value, " ");
+                strcat(command->value, token);
+            } else {
+                command->type = CMD_UNKNOWN;
+                break;
+            }
         }
 
         token = strtok(NULL, " ");
@@ -56,7 +69,7 @@ static ParseResult validate_command(const ParsedCommand *command, int token_coun
             return token_count == 1 ? PARSE_SUCCESS : PARSE_INVALID;
 
         case CMD_PUT:
-            return token_count == 3 ? PARSE_SUCCESS : PARSE_INVALID;
+            return token_count >= 3 ? PARSE_SUCCESS : PARSE_INVALID;
 
         case CMD_GET:
         case CMD_DELETE:

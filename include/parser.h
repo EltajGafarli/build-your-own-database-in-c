@@ -10,7 +10,7 @@ typedef enum {
 } ParseResult;
 
 typedef enum {
-    CMD_HELP,
+    CMD_HELP = 1,
     CMD_EXIT,
     CMD_PUT,
     CMD_GET,
