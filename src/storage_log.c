@@ -66,22 +66,33 @@ bool storage_log_append(ParsedCommand *command, const char *filename) {
 
 bool storage_log_compact(KvStore *store, const char *filename) {
 
-    const char *suffix = ".tmp";
+    const char *suffix_tmp = ".tmp";
+    const char *suffix_backup = ".bak";
 
-    size_t temp_len = strlen(filename) + strlen(suffix) + 1;
+    size_t temp_len = strlen(filename) + strlen(suffix_tmp) + 1;
+    size_t backup_len = strlen(filename) + strlen(suffix_backup) + 1;
 
     char *temp_filename = malloc(temp_len);
+    char *backup_filename = malloc(backup_len);
 
-    if (temp_filename == NULL) {
+    if (temp_filename == NULL || backup_filename == NULL) {
+
+        free(temp_filename);
+        free(backup_filename);
+
         return false;
     }
 
-    snprintf(temp_filename, temp_len, "%s%s", filename, suffix);
+    snprintf(temp_filename, temp_len, "%s%s", filename, suffix_tmp);
+    snprintf(backup_filename, backup_len, "%s%s", filename, suffix_backup);
+
+    remove(backup_filename); // remove old backup file
 
     FILE * fp = fopen(temp_filename, "w");
 
     if (fp == NULL) {
         free(temp_filename);
+        free(backup_filename);
         return false;
     }
 
@@ -98,17 +109,46 @@ bool storage_log_compact(KvStore *store, const char *filename) {
     if (fclose(fp) != 0) {
         remove(temp_filename);
         free(temp_filename);
+        free(backup_filename);
         return false;
     }
 
-    remove(filename);
+
+    FILE * original_fp = fopen(filename, "r");
+
+    bool backup_created = false;
+
+    if (original_fp != NULL) {
+        fclose(original_fp);
+        if (rename(filename, backup_filename) != 0) {
+            free(temp_filename);
+            free(backup_filename);
+            remove(backup_filename);
+            remove(temp_filename);
+            return false;
+        }
+
+        backup_created = true;
+    } else {
+        backup_created = false;
+    }
 
     if (rename(temp_filename, filename) != 0) {
         remove(temp_filename);
+
+        if (backup_created) {
+            rename(backup_filename, filename);
+        }
         free(temp_filename);
+        free(backup_filename);
         return false;
     }
 
+    if (backup_created) {
+        remove(backup_filename);
+    }
+
     free(temp_filename);
+    free(backup_filename);
     return true;
 }
