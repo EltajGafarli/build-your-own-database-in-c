@@ -1,60 +1,96 @@
 #include "../include/parser.h"
 
 #include <string.h>
-#include <stdio.h>
+#include <stddef.h>
 
 static ParseResult validate_command(const ParsedCommand *command, int token_count);
 static void init_parsed_command(ParsedCommand *command);
 static CommandType parse_command_type(const char *token);
-static void copy_token(char *destination, const char *source);
+
+static const char *skip_spaces(const char *p);
+static void trim_right(char *str);
+static int copy_range(char *destination, size_t destination_size, const char *start, size_t length);
+static int copy_string(char *destination, size_t destination_size, const char *source);
 
 ParseResult parse_command(const char *input, ParsedCommand *command) {
-
     init_parsed_command(command);
 
     char input_copy[MAX_INPUT_SIZE];
 
-    copy_token(input_copy, input);
+    if (!copy_string(input_copy, sizeof(input_copy), input)) {
+        return PARSE_INVALID;
+    }
 
-    char *token = strtok(input_copy, " ");
+    trim_right(input_copy);
 
-    if (token == NULL || strlen(token) == 0) {
+    const char *p = skip_spaces(input_copy);
+
+    if (*p == '\0') {
         return PARSE_EMPTY;
     }
 
-    int token_count = 0;
+    const char *command_start = p;
 
-    while (token != NULL) {
+    while (*p != '\0' && *p != ' ' && *p != '\t') {
+        p++;
+    }
 
-        if (token_count == 0) {
-            command->type = parse_command_type(token);
-        } else if (token_count == 1) {
-            strncpy(command->key, token, MAX_TOKEN_SIZE - 1);
-            command->key[MAX_TOKEN_SIZE - 1] = '\0';
-        } else if (token_count == 2) {
-            strncpy(command->value, token, MAX_TOKEN_SIZE - 1);
-            command->value[MAX_TOKEN_SIZE - 1] = '\0';
-        } else if (token_count > 2 && command->type != CMD_PUT) {
-            command->type = CMD_UNKNOWN;
-            break;
+    char command_token[MAX_TOKEN_SIZE];
+
+    if (!copy_range(command_token, sizeof(command_token), command_start, (size_t)(p - command_start))) {
+        return PARSE_INVALID;
+    }
+
+    command->type = parse_command_type(command_token);
+
+    p = skip_spaces(p);
+
+    if (command->type == CMD_PUT) {
+        if (*p == '\0') {
+            return PARSE_INVALID;
         }
 
-        if (token_count >= 3) {
+        const char *key_start = p;
 
-            size_t new_val_len = strlen(command->value) + strlen(token) + 1;
+        while (*p != '\0' && *p != ' ' && *p != '\t') {
+            p++;
+        }
 
-            if (new_val_len < MAX_TOKEN_SIZE) {
-                strcat(command->value, " ");
-                strcat(command->value, token);
-            } else {
-                command->type = CMD_UNKNOWN;
-                break;
+        if (!copy_range(command->key, sizeof(command->key), key_start, (size_t)(p - key_start))) {
+            return PARSE_INVALID;
+        }
+
+        p = skip_spaces(p);
+
+        if (*p == '\0') {
+            return PARSE_INVALID;
+        }
+
+        if (!copy_string(command->value, sizeof(command->value), p)) {
+            return PARSE_INVALID;
+        }
+
+        return validate_command(command, 3);
+    }
+
+    int token_count = 1;
+
+    while (*p != '\0') {
+        const char *token_start = p;
+
+        while (*p != '\0' && *p != ' ' && *p != '\t') {
+            p++;
+        }
+
+        token_count++;
+
+        if (token_count == 2) {
+            if (!copy_range(command->key, sizeof(command->key), token_start, (size_t)(p - token_start))) {
+                return PARSE_INVALID;
             }
         }
 
-        token = strtok(NULL, " ");
-
-        token_count ++;
+        p = skip_spaces(p);
     }
 
     return validate_command(command, token_count);
@@ -69,11 +105,18 @@ static ParseResult validate_command(const ParsedCommand *command, int token_coun
             return token_count == 1 ? PARSE_SUCCESS : PARSE_INVALID;
 
         case CMD_PUT:
-            return token_count >= 3 ? PARSE_SUCCESS : PARSE_INVALID;
+            return token_count == 3 &&
+                   command->key[0] != '\0' &&
+                   command->value[0] != '\0'
+                   ? PARSE_SUCCESS
+                   : PARSE_INVALID;
 
         case CMD_GET:
         case CMD_DELETE:
-            return token_count == 2 ? PARSE_SUCCESS : PARSE_INVALID;
+            return token_count == 2 &&
+                   command->key[0] != '\0'
+                   ? PARSE_SUCCESS
+                   : PARSE_INVALID;
 
         case CMD_UNKNOWN:
         default:
@@ -119,7 +162,46 @@ static CommandType parse_command_type(const char *token) {
     return CMD_UNKNOWN;
 }
 
-static void copy_token(char *destination, const char *source) {
-    strncpy(destination, source, MAX_INPUT_SIZE - 1);
-    destination[MAX_INPUT_SIZE - 1] = '\0';
+static const char *skip_spaces(const char *p) {
+    while (*p == ' ' || *p == '\t') {
+        p++;
+    }
+
+    return p;
+}
+
+static void trim_right(char *str) {
+    size_t len = strlen(str);
+
+    while (len > 0 &&
+           (str[len - 1] == '\n' ||
+            str[len - 1] == '\r' ||
+            str[len - 1] == ' ' ||
+            str[len - 1] == '\t')) {
+        str[len - 1] = '\0';
+        len--;
+    }
+}
+
+static int copy_range(char *destination, size_t destination_size, const char *start, size_t length) {
+    if (length >= destination_size) {
+        return 0;
+    }
+
+    memcpy(destination, start, length);
+    destination[length] = '\0';
+
+    return 1;
+}
+
+static int copy_string(char *destination, size_t destination_size, const char *source) {
+    size_t source_len = strlen(source);
+
+    if (source_len >= destination_size) {
+        return 0;
+    }
+
+    memcpy(destination, source, source_len + 1);
+
+    return 1;
 }
