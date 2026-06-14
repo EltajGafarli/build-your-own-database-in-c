@@ -13,3 +13,5 @@ void load_storage_log(KvStore *store, const char *filename);
 bool storage_log_append(ParsedCommand *command, const char *filename);
 
 bool storage_log_compact(KvStore *store, const char *filename);
+
+long storage_log_get_file_size(const char *filename);
