@@ -9,6 +9,12 @@ static void copy_token(char *destination, const char *source);
 
 static unsigned int hash(const char *str);
 
+static size_t get_used_bucket_count(const KvStore *store);
+
+static size_t get_collision_count(const KvStore *store);
+
+static size_t get_max_bucket_depth(const KvStore *store);
+
 void kv_store_init(KvStore *store) {
     store->size = 0;
 
@@ -142,6 +148,82 @@ void kv_store_destroy(KvStore *store) {
     }
 
     kv_store_init(store);
+}
+
+void kv_store_get_stats(const KvStore *store, KvStoreStats *stats) {
+
+    kv_store_stats_init(stats);
+
+    stats->active_records = store->size;
+    stats->max_records = KV_MAX_ITEMS;
+    stats->bucket_count = DEFAULT_BUCKET_SIZE;
+    stats->used_buckets = get_used_bucket_count(store);
+    stats->collision_count = get_collision_count(store);
+    stats->load_factor = (double) store->size / DEFAULT_BUCKET_SIZE;
+    stats->max_bucket_depth = get_max_bucket_depth(store);
+}
+
+void kv_store_stats_init(KvStoreStats *stats) {
+    stats->active_records = 0;
+    stats->max_records = 0;
+    stats->bucket_count = 0;
+    stats->used_buckets = 0;
+    stats->collision_count = 0;
+    stats->max_bucket_depth = 0;
+    stats->load_factor = 0.0;
+}
+
+static size_t get_used_bucket_count(const KvStore *store) {
+    size_t count = 0;
+
+    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+        if (store->buckets[i] != NULL) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+static size_t get_max_bucket_depth(const KvStore *store) {
+    size_t max_depth = 0;
+
+    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+        if (store->buckets[i] != NULL) {
+
+            size_t current_depth = 0;
+            KvEntry *head = store->buckets[i];
+            while (head != NULL) {
+                head = head->next;
+                current_depth++;
+            }
+
+            max_depth = current_depth > max_depth ? current_depth : max_depth;
+        }
+    }
+
+    return max_depth;
+}
+
+static size_t get_collision_count(const KvStore *store) {
+
+    size_t count = 0;
+
+    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+        if (store->buckets[i] != NULL) {
+            int current_count = 0;
+            KvEntry *head = store->buckets[i];
+            while (head != NULL) {
+                head = head->next;
+                current_count++;
+            }
+
+            count += current_count > 1 ? current_count - 1 : 0;
+        }
+
+    }
+
+    return count;
 }
 
 static void copy_token(char *destination, const char *source) {

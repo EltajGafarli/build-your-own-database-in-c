@@ -100,9 +100,19 @@ CommandResult handle_command(KvStore *store, ParsedCommand *command, const char 
         }
 
         case CMD_STATS: {
-            printf("Active records: %zu\nMax records: %zu\nStorage file: %s\n",
-                store->size,
-                (size_t)KV_MAX_ITEMS,
+
+            KvStoreStats stats;
+            kv_store_get_stats(store, &stats);
+
+            printf("Active records: %zu\n", stats.active_records);
+            printf("Max records: %zu\n", stats.max_records);
+            printf("Bucket count: %zu\n", stats.bucket_count);
+            printf("Load factor: %.2f\n", stats.load_factor);
+            printf("Used buckets: %zu\n", stats.used_buckets);
+            printf("Collision count: %zu\n", stats.collision_count);
+            printf("Max bucket depth: %zu\n", stats.max_bucket_depth);
+
+            printf("Storage file: %s\n",
                 file_path);
 
             long file_size = storage_log_get_file_size(file_path);
@@ -112,11 +122,6 @@ CommandResult handle_command(KvStore *store, ParsedCommand *command, const char 
             } else {
                 printf("Storage file size: 0 bytes\n");
             }
-
-            double load_factor = (double) store->size / (double) DEFAULT_BUCKET_SIZE;
-
-            printf("Bucket count: %zu\n", (size_t) DEFAULT_BUCKET_SIZE);
-            printf("Load factor: %.2f\n", load_factor);
 
             return COMMAND_SUCCESS;
         }
