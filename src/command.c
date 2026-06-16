@@ -113,6 +113,11 @@ CommandResult handle_command(KvStore *store, ParsedCommand *command, const char 
                 printf("Storage file size: 0 bytes\n");
             }
 
+            double load_factor = (double) store->size / (double) DEFAULT_BUCKET_SIZE;
+
+            printf("Bucket count: %zu\n", (size_t) DEFAULT_BUCKET_SIZE);
+            printf("Load factor: %.2f\n", load_factor);
+
             return COMMAND_SUCCESS;
         }
 
