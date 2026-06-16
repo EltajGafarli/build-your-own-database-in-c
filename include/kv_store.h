@@ -24,6 +24,17 @@ typedef struct {
     size_t size;
 } KvStore;
 
+typedef struct KvStoreStats {
+
+    size_t active_records;
+    size_t bucket_count;
+    size_t used_buckets;
+    size_t collision_count;
+    size_t max_records;
+    size_t max_bucket_depth;
+    double load_factor;
+} KvStoreStats;
+
 void kv_store_init(KvStore *store);
 
 KvResult kv_store_put(KvStore *store, const char *key, const char *value);
@@ -33,3 +44,7 @@ KvResult kv_store_get(const KvStore *store, const char *key, const char **value)
 KvResult kv_store_delete(KvStore *store, const char *key);
 
 void kv_store_destroy(KvStore *store);
+
+void kv_store_get_stats(const KvStore *store, KvStoreStats *stats);
+
+void kv_store_stats_init(KvStoreStats *stats);
