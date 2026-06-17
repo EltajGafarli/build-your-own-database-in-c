@@ -6,6 +6,7 @@
 #define KV_MAX_ITEMS 1024
 #define MAX_TOKEN_SIZE 256
 #define DEFAULT_BUCKET_COUNT 256
+#define MAX_LOAD_FACTOR 0.75
 
 typedef enum {
     KV_OK,

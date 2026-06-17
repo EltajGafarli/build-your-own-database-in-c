@@ -15,6 +15,8 @@ static size_t get_collision_count(const KvStore *store);
 
 static size_t get_max_bucket_depth(const KvStore *store);
 
+static bool kv_store_resize(KvStore *store, size_t new_bucket_count);
+
 bool kv_store_init(KvStore *store) {
     store->size = 0;
     store->bucket_count = DEFAULT_BUCKET_COUNT;
@@ -36,40 +38,37 @@ KvResult kv_store_put(KvStore *store, const char *key, const char *value) {
 
     size_t index = hash_val % store->bucket_count;
 
-    if (store->buckets[index] == NULL) {
-        KvEntry *entry = create_kv_entry(key, value);
-        if (entry == NULL) {
-            return KV_FULL;
-        }
-        store->buckets[index] = entry;
-        store->size++;
-        return KV_OK;
-    } else {
-        KvEntry *head = store->buckets[index];
+    KvEntry *head = store->buckets[index];
 
-        while (head->next != NULL) {
-            if (strcmp(head->key, key) == 0) {
-                copy_token(head->value, value);
-                return KV_OK;
-            }
-            head = head->next;
-        }
-
+    while (head != NULL) {
         if (strcmp(head->key, key) == 0) {
             copy_token(head->value, value);
             return KV_OK;
         }
+        head = head->next;
+    }
 
-        KvEntry *entry = create_kv_entry(key, value);
+    double next_load_factor = (double)(store->size + 1) / (double)store->bucket_count;
 
-        if (entry == NULL) {
+    if (next_load_factor > MAX_LOAD_FACTOR) {
+        if (!kv_store_resize(store, store->bucket_count * 2)) {
             return KV_FULL;
         }
 
-        head->next = entry;
-        store->size++;
-        return KV_OK;
+        index = hash_val % store->bucket_count;
     }
+
+    KvEntry *entry = create_kv_entry(key, value);
+
+    if (entry == NULL) {
+        return KV_FULL;
+    }
+
+    entry->next = store->buckets[index];
+    store->buckets[index] = entry;
+    store->size++;
+
+    return KV_OK;
 }
 
 
@@ -251,4 +250,36 @@ static unsigned int hash(const char *str) {
     }
 
     return hashVal;
+}
+
+static bool kv_store_resize(KvStore *store, size_t new_bucket_count) {
+
+    KvEntry **new_buckets = calloc(new_bucket_count, sizeof(KvEntry *));
+
+    KvEntry **old_buckets = store->buckets;
+
+    if (new_buckets == NULL) {
+        return false;
+    }
+
+    for (size_t i = 0; i < store->bucket_count; i++) {
+        KvEntry *current = old_buckets[i];
+
+        while (current != NULL) {
+            KvEntry *next = current->next;
+
+            size_t new_index = hash(current->key) % new_bucket_count;
+
+            current->next = new_buckets[new_index];
+            new_buckets[new_index] = current;
+            current = next;
+        }
+    }
+
+    free(old_buckets);
+
+    store->buckets = new_buckets;
+    store->bucket_count = new_bucket_count;
+
+    return true;
 }
