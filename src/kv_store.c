@@ -15,19 +15,26 @@ static size_t get_collision_count(const KvStore *store);
 
 static size_t get_max_bucket_depth(const KvStore *store);
 
-void kv_store_init(KvStore *store) {
+bool kv_store_init(KvStore *store) {
     store->size = 0;
+    store->bucket_count = DEFAULT_BUCKET_COUNT;
 
-    for (int i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
-        store->buckets[i] = NULL;
+    store->buckets = calloc(store->bucket_count, sizeof(KvEntry *));
+
+    if (store->buckets == NULL) {
+        store->size = 0;
+        store->bucket_count = 0;
+        return false;
     }
+
+    return true;
 }
 
 KvResult kv_store_put(KvStore *store, const char *key, const char *value) {
 
     unsigned int hash_val = hash(key);
 
-    size_t index = hash_val % DEFAULT_BUCKET_SIZE;
+    size_t index = hash_val % store->bucket_count;
 
     if (store->buckets[index] == NULL) {
         KvEntry *entry = create_kv_entry(key, value);
@@ -85,7 +92,7 @@ static KvEntry *create_kv_entry(const char *key, const char *value) {
 KvResult kv_store_get(const KvStore *store, const char *key, const char **value) {
 
     unsigned int hash_val = hash(key);
-    size_t index = hash_val % DEFAULT_BUCKET_SIZE;
+    size_t index = hash_val % store->bucket_count;
 
     KvEntry *head = store->buckets[index];
 
@@ -104,7 +111,7 @@ KvResult kv_store_delete(KvStore *store, const char *key) {
 
     unsigned int hash_val = hash(key);
 
-    size_t index = hash_val % DEFAULT_BUCKET_SIZE;
+    size_t index = hash_val % store->bucket_count;
 
     KvEntry *head = store->buckets[index];
 
@@ -138,7 +145,7 @@ KvResult kv_store_delete(KvStore *store, const char *key) {
 }
 
 void kv_store_destroy(KvStore *store) {
-    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+    for (size_t i = 0; i < store->bucket_count; i++) {
         KvEntry *head = store->buckets[i];
         while (head != NULL) {
             KvEntry *temp = head->next;
@@ -147,7 +154,10 @@ void kv_store_destroy(KvStore *store) {
         }
     }
 
-    kv_store_init(store);
+    free(store->buckets);
+    store->size = 0;
+    store->bucket_count = 0;
+    store->buckets = NULL;
 }
 
 void kv_store_get_stats(const KvStore *store, KvStoreStats *stats) {
@@ -156,10 +166,10 @@ void kv_store_get_stats(const KvStore *store, KvStoreStats *stats) {
 
     stats->active_records = store->size;
     stats->max_records = KV_MAX_ITEMS;
-    stats->bucket_count = DEFAULT_BUCKET_SIZE;
+    stats->bucket_count = store->bucket_count;
     stats->used_buckets = get_used_bucket_count(store);
     stats->collision_count = get_collision_count(store);
-    stats->load_factor = (double) store->size / DEFAULT_BUCKET_SIZE;
+    stats->load_factor = (double) store->size / (double)store->bucket_count;
     stats->max_bucket_depth = get_max_bucket_depth(store);
 }
 
@@ -176,7 +186,7 @@ void kv_store_stats_init(KvStoreStats *stats) {
 static size_t get_used_bucket_count(const KvStore *store) {
     size_t count = 0;
 
-    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+    for (size_t i = 0; i < store->bucket_count; i++) {
         if (store->buckets[i] != NULL) {
             count++;
         }
@@ -188,7 +198,7 @@ static size_t get_used_bucket_count(const KvStore *store) {
 static size_t get_max_bucket_depth(const KvStore *store) {
     size_t max_depth = 0;
 
-    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+    for (size_t i = 0; i < store->bucket_count; i++) {
         if (store->buckets[i] != NULL) {
 
             size_t current_depth = 0;
@@ -209,7 +219,7 @@ static size_t get_collision_count(const KvStore *store) {
 
     size_t count = 0;
 
-    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+    for (size_t i = 0; i < store->bucket_count; i++) {
         if (store->buckets[i] != NULL) {
             int current_count = 0;
             KvEntry *head = store->buckets[i];

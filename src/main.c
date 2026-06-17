@@ -36,7 +36,12 @@ int main(int argc, char *argv[]) {
     }
 
     KvStore store;
-    kv_store_init(&store);
+    bool initialized = kv_store_init(&store);
+
+    if (!initialized) {
+        printf("Error: Failed to initialize KV store.\n");
+        return EXIT_FAILURE;
+    }
 
     load_storage_log(&store, file_path);
 

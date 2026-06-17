@@ -96,7 +96,7 @@ bool storage_log_compact(KvStore *store, const char *filename) {
         return false;
     }
 
-    for (size_t i = 0; i < DEFAULT_BUCKET_SIZE; i++) {
+    for (size_t i = 0; i < store->bucket_count; i++) {
 
         KvEntry *head = store->buckets[i];
 
