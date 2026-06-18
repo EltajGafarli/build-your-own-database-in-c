@@ -32,6 +32,21 @@ bool kv_store_init(KvStore *store) {
     return true;
 }
 
+bool kv_store_init_with_bucket_count(KvStore *store, size_t bucket_count) {
+    store->size = 0;
+    store->bucket_count = bucket_count;
+
+    store->buckets = calloc(store->bucket_count, sizeof(KvEntry *));
+
+    if (store->buckets == NULL) {
+        store->size = 0;
+        store->bucket_count = 0;
+        return false;
+    }
+
+    return true;
+}
+
 KvResult kv_store_put(KvStore *store, const char *key, const char *value) {
 
     unsigned int hash_val = hash(key);

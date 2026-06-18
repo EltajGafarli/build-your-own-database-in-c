@@ -39,6 +39,8 @@ typedef struct KvStoreStats {
 
 bool kv_store_init(KvStore *store);
 
+bool kv_store_init_with_bucket_count(KvStore *store, size_t bucket_count);
+
 KvResult kv_store_put(KvStore *store, const char *key, const char *value);
 
 KvResult kv_store_get(const KvStore *store, const char *key, const char **value);
