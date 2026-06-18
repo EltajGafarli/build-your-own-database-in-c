@@ -21,6 +21,7 @@ typedef struct {
     const char *file_path;
     size_t bucket_count;
     bool bucket_count_provided;
+    bool help_requested;
 } CliConfig;
 
 static volatile sig_atomic_t keep_running = 1;
@@ -33,14 +34,14 @@ static CliParseResult parse_cli_args(int argc, char *argv[], CliConfig *config);
 
 static void init_cli_config(CliConfig *config);
 
+static void print_cli_usage(void);
+
 int main(int argc, char *argv[]) {
 
     if (signal(SIGINT, handle_sigint) == SIG_ERR) {
         perror("Error registering signal handler");
         return EXIT_FAILURE;
     }
-
-    char input[MAX_INPUT_SIZE];
 
     CliConfig cli_config;
 
@@ -50,8 +51,13 @@ int main(int argc, char *argv[]) {
     CliParseResult parse_cli_result = parse_cli_args(argc, argv, &cli_config);
 
     if (parse_cli_result == CLI_PARSE_INVALID) {
-        printf("Usage: PageDB [database_file] [--bucket-count N]\n");
+        print_cli_usage();
         return EXIT_FAILURE;
+    }
+
+    if (cli_config.help_requested) {
+        print_cli_usage();
+        return EXIT_SUCCESS;
     }
 
     KvStore store;
@@ -71,6 +77,8 @@ int main(int argc, char *argv[]) {
     const char *file_path = cli_config.file_path;
 
     load_storage_log(&store, file_path);
+
+    char input[MAX_INPUT_SIZE];
 
     while (keep_running) {
 
@@ -118,6 +126,15 @@ static CliParseResult parse_cli_args(int argc, char *argv[], CliConfig *config) 
     bool file_path_provided = false;
 
     for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
+            if (argc != 2) {
+                return CLI_PARSE_INVALID;
+            }
+
+            config->help_requested = true;
+            return CLI_PARSE_OK;
+        }
+
         if (strcmp(argv[i], bucket_count_option) == 0) {
             if (config->bucket_count_provided) {
                 return CLI_PARSE_INVALID;
@@ -161,4 +178,31 @@ static void init_cli_config(CliConfig *config) {
     config->file_path = "../data/pagedb.data";
     config->bucket_count = DEFAULT_BUCKET_COUNT;
     config->bucket_count_provided = false;
+    config->help_requested = false;
+}
+
+static void print_cli_usage(void) {
+    printf("PageDB - Simple append-only key-value database\n");
+    printf("\n");
+    printf("Usage:\n");
+    printf("  PageDB\n");
+    printf("  PageDB [database_file]\n");
+    printf("  PageDB [database_file] [--bucket-count N]\n");
+    printf("  PageDB [--bucket-count N] [database_file]\n");
+    printf("\n");
+    printf("Options:\n");
+    printf("  --bucket-count N   Set initial hash table bucket count. N must be greater than 0.\n");
+    printf("  --help             Show this help message and exit.\n");
+    printf("  -h                 Show this help message and exit.\n");
+    printf("\n");
+    printf("Defaults:\n");
+    printf("  database_file      ../data/pagedb.data\n");
+    printf("  bucket count       DEFAULT_BUCKET_COUNT\n");
+    printf("\n");
+    printf("Examples:\n");
+    printf("  PageDB\n");
+    printf("  PageDB mydb.data\n");
+    printf("  PageDB --bucket-count 3\n");
+    printf("  PageDB mydb.data --bucket-count 3\n");
+    printf("  PageDB --bucket-count 3 mydb.data\n");
 }
