@@ -12,3 +12,14 @@ add_executable(PageDB src/main.c
         src/cli.c)
 
 target_include_directories(PageDB PRIVATE include)
+
+enable_testing()
+
+add_executable(test_cli
+        ./tests/cli/test_cli.c
+        src/cli.c
+)
+
+target_include_directories(test_cli PRIVATE include)
+
+add_test(NAME cli_tests COMMAND test_cli)
